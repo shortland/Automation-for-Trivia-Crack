@@ -2,29 +2,31 @@
 
 # Ilan Kleiman
 # January 15 2015
-# Pretty Wicked.
+#  Trivial Crack
+    # Make Game Version.
 
-# Enter your account cookie in cookie file...
-
-print "Game ID # (remove unecessary spaces!):\n:";
-chomp ($game = <STDIN>);
+use File::Slurp;
 
 print "Your user ID:\n:";
 chomp ($myuserid = <STDIN>);
 
+# Start Gamer
+
+sub make_a_game
+{
+my ($myuserid) = @_;
+    $data = "{\"language\":\"EN\"}";
+$make_game = `curl -s -b cookie -A 'Preguntados/1.9.3 (iPhone; iOS 8.1.2; Scale/2.00)' --data '$data' 'http://api.preguntados.com/api/users/$myuserid/games' `;
+}
 begin:
-print "\n\n=====================\n\n";
-print "Press 'Enter' after pressing the continue button. Before spinning the wheel.\n\n";
-chomp ($meow = <STDIN>);
+$resp = read_file("playing_game_0.txt");
 
-$data = "{\"type\":\"NORMAL\",\"answers\":[{\"power_ups\":[\"EXTRA_TIME\"],\"id\":6777,\"category\":\"GEOGRAPHY\",\"answer\":0}]}";
-$resp = `curl -s -b cookie -A 'Preguntados/1.9.3 (iPhone; iOS 8.1.2; Scale/2.00)' --data '$data' 'http://api.preguntados.com/api/users/$myuserid/games/$game/answers' `;
-
-# if game type = crown, chomp user to input the category they want to do in crown.
-# "normalType":true,"spins_data":{"spins":[{"type":"CROWN","questions"
-        ($type_of) = ($resp =~ /\"spins_data\":{\"spins\":[{\"type\"[^:]*:([^,]+)/);
+    # many ID's though; this is the first one always; afaik
+    ($game) =  ($resp =~ /\"id\"[^:]*:([^,]+)/);
+    
+    ($type_of) = ($resp =~ /\"spins_data\":{\"spins\":[{\"type\"[^:]*:([^,]+)/);
+    $type_of =~ s/\"//g;
             
-            $type_of =~ s/\"//g;
             if($type_of =~ "CROWN")
     {
                 print "Crown Match, Which category?\n";
@@ -37,68 +39,126 @@ $resp = `curl -s -b cookie -A 'Preguntados/1.9.3 (iPhone; iOS 8.1.2; Scale/2.00)
                 print "Type in the number that corresponds to the category of the character you chose. (then press enter)\n";
                 print "Category #: ";
                 chomp ($category = <STDIN>);
-            
-            
-            # "category":"GEOGRAPHY","text":"How many continents are on Planet Earth?","answers":["7","5","6","8"],"correct_answer":0,"media_type":"NORMAL"},
+                
+# Working some magic here (magic scroll updated 1-24-15 10:22 PM)
+$resp_easy = $resp;
+$year_of = 0;
+industrialism:
+$year_of = $year_of + 1;
+    ($documentation) = ($resp_easy =~ /\"question\":[^{]*{([^{]+)/);
+        ($categorization) = ($documentation =~ /\"category\":[^"]*"([^,]+)/);
+        $categorization =~ s/"//g;
+            ($layer_id) = ($documentation =~ /\"id\"[^:]*:([^,]+)/);
+if ($categorization =~ /HISTORY/i)
+{
+    $q_history_id = $layer_id;
+}
+if ($categorization =~ /GEOGRAPHY/i)
+{
+    $q_geography_id = $layer_id;
+}
+if ($categorization =~ /ARTS/i)
+{
+    $q_arts_id = $layer_id;
+}
+if ($categorization =~ /SPORTS/i)
+{
+    $q_sports_id = $layer_id;
+}
+if ($categorization =~ /ENTERTAINMENT/i)
+{
+    $q_entertainment_id = $layer_id;
+}
+if ($categorization =~ /SCIENCE/i)
+{
+    $q_science_id = $layer_id;
+}
+$resp_easy =~ s/"question"/WONDERFUL $categorization DATA GOES HERE/;
+if ($year_of !~ 6)
+{
+    goto industrialism;
+}
+# End magic 
 
+            if($category =~ "1")
+            {
+                ($category_info) = ($resp =~ /,\"category\":\"ENTERTAINMENT\"[^,]*,(.+)/);
+                $cat_name = "ENTERTAINMENT";
+                $question_id = $q_entertainment_id;
+            }
             if($category =~ "2")
             {
                 ($category_info) = ($resp =~ /,\"category\":\"ARTS\"[^,]*,(.+)/);
+                $cat_name = "ARTS";
+                $question_id = $q_arts_id;
             }
             if($category =~ "3")
             {
                 ($category_info) = ($resp =~ /,\"category\":\"SPORTS\"[^,]*,(.+)/);
-            }
-            if($category =~ "1")
-            {
-                ($category_info) = ($resp =~ /,\"category\":\"ENTERTAINMENT\"[^,]*,(.+)/);
+                $cat_name = "SPORTS";
+                $question_id = $q_sports_id;
             }
             if($category =~ "4")
             {
                 ($category_info) = ($resp =~ /,\"category\":\"HISTORY\"[^,]*,(.+)/);
-            }
-            if($category =~ "6") # Geography
-            {
-                ($category_info) = ($resp =~ /,\"category\":\"GEOGRAPHY\"[^,]*,(.+)/);
+                $cat_name = "HISTORY";
+                $question_id = $q_history_id;
             }
             if($category =~ "5")
             {
                 ($category_info) = ($resp =~ /,\"category\":\"SCIENCE\"[^,]*,(.+)/);
+                $cat_name = "SCIENCE";
+                $question_id = $q_science_id;
             }
-                # "text":"Which was the craft that brought the first man to space?","answers":["Soyuz","Vostok","Salyut","Eagle"],"correct_answer":1,"media_type":"NORMAL"
+            if($category =~ "6") 
+            {
+                ($category_info) = ($resp =~ /,\"category\":\"GEOGRAPHY\"[^,]*,(.+)/);
+                $cat_name = "GEOGRAPHY";
+                $question_id = $q_geography_id;
+            }
                     ($question) = ($category_info =~ /text[^:]*:([^[]+)/);
                         $question =~ s/,"answers"://g;
-
-                    ($answers) = ($category_info =~ /\"answers\"[^:]*:([^]]+)/); #\]
+                    ($answers) = ($category_info =~ /\"answers\"[^:]*:([^]]+)/);
                         $answers = $answers."]";
                         $answers =~ s/,/]\n[/g;
-#$answers =~ s/,/]\n[/g;
-        #print ">>>$category_info<<<";
                     ($answer) = ($category_info =~ /\"correct_answer\"[^:]*:([^,]+)/);
-                        $answer = $answer + 1;
     }
 else
-{
-# Question, irrelevant.
-        ($question) = ($resp =~ /text[^:]*:([^,]+)/);
-    
-# Answer choices are irrelevant.
-        ($answers) = ($resp =~ /\"answers\"[^:]*:([^]]+)/);
-            $answers = $answers."]";
-# $answers =~ s/,\"author\"://g; #,"author":
-            $answers =~ s/,/]\n[/g;
+    {
+            ($question) = ($resp =~ /text[^:]*:([^,]+)/);
+            ($answers) = ($resp =~ /\"answers\"[^:]*:([^]]+)/);
+                $answers = $answers."]";
+                $answers =~ s/,/]\n[/g;
+            ($answer) = ($resp =~ /\"correct_answer\"[^:]*:([^,]+)/);
+            ($question_id) = ($resp =~ /,\"questions\":[{\"question\":{\"id\"[^:]*:([^,]+)/);
+            ($cat_name) = ($resp =~ /\"id\":$question_id,\"category\"[^:]*:([^,]+)/);
+                $cat_name =~ s/"//g;
+    }
 
-# Correct Answer: ,"correct_answer":0,"media_type":
-        ($answer) = ($resp =~ /\"correct_answer\"[^:]*:([^,]+)/);
-            $answer = $answer + 1;
-}
-            print "\nType: $type_of\n";
-            print "\nQuestion: $question\n";
-            print "$answers";
-            print "\n\nAnswer is # $answer\n";
-goto begin;
+    # Answer it:
+    $trial = 0;
+    $data_2 = "{\"type\":\"$type_of\",\"answers\":[{\"id\":$question_id,\"answer\":$answer,\"category\":\"$cat_name\"}]}";
+                remix:
+    $resp_2 = `curl -s -b cookie -A 'Preguntados/1.9.3 (iPhone; iOS 8.1.2; Scale/2.00)' --data '$data_2' 'http://api.preguntados.com/api/users/$myuserid/games/$game/answers'`;
 
+    if($resp_2 =~ /Status page/)
+    {
+        if($trial =~ "6")
+        {
+            die "6 failed server request. A script error may be responsible...\n";
+        }
+        print "\nRequest Failed. Trying again..\n";
+        $trial = $trial + 1;
+        goto remix;
+    }
 
+    open(my $file, '>', "playing_game_0.txt");
+    print $file $resp_2;
+    close $file;
+
+print $data_2."\n\n";
+#print $resp_2;
+#goto begin;
 
 
 
