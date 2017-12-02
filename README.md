@@ -1,4 +1,6 @@
 Please see https://github.com/shortland/Trivia-Crack-Automated for newest & complete version.
+
+
 <strike>This is currently pretty much a rough draft...
 
 Anyone using this script will have difficulty in getting their 'account cookie', 'account id' and 'game ids' to fetch answers for... Updates to come!
